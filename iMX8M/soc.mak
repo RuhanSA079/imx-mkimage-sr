@@ -98,7 +98,7 @@ lpddr4_dmem_2d = lpddr4_pmu_train_2d_dmem$(LPDDR_FW_VERSION).bin
 
 u-boot-spl-ddr.bin: u-boot-spl.bin $(lpddr4_imem_1d) $(lpddr4_dmem_1d) $(lpddr4_imem_2d) $(lpddr4_dmem_2d)
 	@objcopy -I binary -O binary --pad-to 0x8000 --gap-fill=0x0 $(lpddr4_imem_1d) lpddr4_pmu_train_1d_imem_pad.bin
-	@objcopy -I binary -O binary --pad-to 0x4000 --gap-fill=0x0 $(lpddr4_dmem_1d) lpddr4_pmu_train_1d_dmem_pad.bin
+	@objcopy -I binary -O binary --pad-to 0x1000 --gap-fill=0x0 $(lpddr4_dmem_1d) lpddr4_pmu_train_1d_dmem_pad.bin
 	@objcopy -I binary -O binary --pad-to 0x8000 --gap-fill=0x0 $(lpddr4_imem_2d) lpddr4_pmu_train_2d_imem_pad.bin
 	@cat lpddr4_pmu_train_1d_imem_pad.bin lpddr4_pmu_train_1d_dmem_pad.bin > lpddr4_pmu_train_1d_fw.bin
 	@cat lpddr4_pmu_train_2d_imem_pad.bin $(lpddr4_dmem_2d) > lpddr4_pmu_train_2d_fw.bin
@@ -144,9 +144,9 @@ u-boot-atf-tee.bin: u-boot.bin bl31.bin $(TEE)
 clean:
 	@rm -f $(MKIMG) u-boot-atf.bin u-boot-atf-tee.bin u-boot-spl-ddr.bin u-boot.itb u-boot.its u-boot-ddr3l.itb u-boot-ddr3l.its u-boot-spl-ddr3l.bin u-boot-ddr4.itb u-boot-ddr4.its u-boot-spl-ddr4.bin u-boot-ddr4-evk.itb u-boot-ivt.itb u-boot-ddr4-evk.its $(OUTIMG)
 
-dtb = evk.dtb
+dtb = $(PLAT)-var-dart-dt8mcustomboard.dtb $(PLAT)-var-dart-dt8mcustomboard-legacy.dtb $(PLAT)-var-som-symphony.dtb
 $(dtb):
-	./$(DTB_PREPROC) $(PLAT)-evk.dtb $(dtb) $(dtbs)
+	./$(DTB_PREPROC) $(dtb) $(dtbs)
 
 u-boot.itb: $(dtb)
 	./$(PAD_IMAGE) $(TEE)

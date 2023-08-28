@@ -73,7 +73,7 @@ else
 PLAT = imx8mq
 HDMI = yes
 SPL_LOAD_ADDR = 0x7E1000
-TEE_LOAD_ADDR = 0xfe000000
+TEE_LOAD_ADDR = 0x56000000
 ATF_LOAD_ADDR = 0x00910000
 VAL_BOARD = val
 #define the F(Q)SPI header file
@@ -98,7 +98,7 @@ lpddr4_dmem_2d = lpddr4_pmu_train_2d_dmem$(LPDDR_FW_VERSION).bin
 
 u-boot-spl-ddr.bin: u-boot-spl.bin $(lpddr4_imem_1d) $(lpddr4_dmem_1d) $(lpddr4_imem_2d) $(lpddr4_dmem_2d)
 	@objcopy -I binary -O binary --pad-to 0x8000 --gap-fill=0x0 $(lpddr4_imem_1d) lpddr4_pmu_train_1d_imem_pad.bin
-	@objcopy -I binary -O binary --pad-to 0x1000 --gap-fill=0x0 $(lpddr4_dmem_1d) lpddr4_pmu_train_1d_dmem_pad.bin
+	@objcopy -I binary -O binary --pad-to 0x4000 --gap-fill=0x0 $(lpddr4_dmem_1d) lpddr4_pmu_train_1d_dmem_pad.bin
 	@objcopy -I binary -O binary --pad-to 0x8000 --gap-fill=0x0 $(lpddr4_imem_2d) lpddr4_pmu_train_2d_imem_pad.bin
 	@cat lpddr4_pmu_train_1d_imem_pad.bin lpddr4_pmu_train_1d_dmem_pad.bin > lpddr4_pmu_train_1d_fw.bin
 	@cat lpddr4_pmu_train_2d_imem_pad.bin $(lpddr4_dmem_2d) > lpddr4_pmu_train_2d_fw.bin
@@ -142,7 +142,7 @@ u-boot-atf-tee.bin: u-boot.bin bl31.bin $(TEE)
 
 .PHONY: clean
 clean:
-	@rm -f $(MKIMG) u-boot-atf.bin u-boot-atf-tee.bin u-boot-spl-ddr.bin u-boot.itb u-boot.its u-boot-ddr3l.itb u-boot-ddr3l.its u-boot-spl-ddr3l.bin u-boot-ddr4.itb u-boot-ddr4.its u-boot-spl-ddr4.bin u-boot-ddr4-evk.itb u-boot-ivt.itb u-boot-ddr4-evk.its $(OUTIMG)
+	@rm -f $(MKIMG) u-boot-atf.bin u-boot-atf-tee.bin u-boot-spl-ddr.bin u-boot.itb u-boot.its u-boot-ddr3l.itb u-boot-ddr3l.its u-boot-spl-ddr3l.bin u-boot-ddr4.itb u-boot-ddr4.its u-boot-spl-ddr4.bin u-boot-ddr4-evk.itb u-boot-ivt.itb u-boot-ddr4-evk.its $(OUTIMG) flash.log fit.log
 
 dtb = $(PLAT)-var-dart-dt8mcustomboard.dtb $(PLAT)-var-dart-dt8mcustomboard-legacy.dtb $(PLAT)-var-som-symphony.dtb
 $(dtb):
@@ -206,23 +206,23 @@ u-boot-ddr4-evk.itb: $(dtb_ddr4_evk)
 
 ifeq ($(HDMI),yes)
 flash_evk: $(MKIMG) signed_hdmi_imx8m.bin u-boot-spl-ddr.bin u-boot.itb
-	./mkimage_imx8 -fit -signed_hdmi signed_hdmi_imx8m.bin -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -fit -signed_hdmi signed_hdmi_imx8m.bin -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_evk_dual_bootloader: $(MKIMG) signed_hdmi_imx8m.bin u-boot-spl-ddr.bin u-boot.itb
 	./mkimage_imx8 -fit -signed_hdmi signed_hdmi_imx8m.bin -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -out $(OUTIMG)
 	./mkimage_imx8 -fit_ivt u-boot.itb 0x40200000 0x0 -out u-boot-ivt.itb
 
 flash_evk_emmc_fastboot: $(MKIMG) signed_hdmi_imx8m.bin u-boot-spl-ddr.bin u-boot.itb
-	./mkimage_imx8 -dev emmc_fastboot -fit -signed_hdmi signed_hdmi_imx8m.bin -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -dev emmc_fastboot -fit -signed_hdmi signed_hdmi_imx8m.bin -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_dp_evk: $(MKIMG) signed_dp_imx8m.bin u-boot-spl-ddr.bin u-boot.itb
-	./mkimage_imx8 -fit -signed_hdmi signed_dp_imx8m.bin -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -fit -signed_hdmi signed_dp_imx8m.bin -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_ddr3l_val: $(MKIMG) signed_dp_imx8m.bin u-boot-spl-ddr3l.bin u-boot-ddr3l.itb
-	./mkimage_imx8 -fit -signed_hdmi signed_dp_imx8m.bin -loader u-boot-spl-ddr3l.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr3l.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -fit -signed_hdmi signed_dp_imx8m.bin -loader u-boot-spl-ddr3l.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr3l.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_ddr4_val: $(MKIMG) signed_hdmi_imx8m.bin u-boot-spl-ddr4.bin u-boot-ddr4.itb
-	./mkimage_imx8 -fit -signed_hdmi signed_hdmi_imx8m.bin -loader u-boot-spl-ddr4.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr4.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -fit -signed_hdmi signed_hdmi_imx8m.bin -loader u-boot-spl-ddr4.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr4.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 else
 flash_evk: flash_evk_no_hdmi
@@ -274,41 +274,41 @@ endif
 
 
 flash_evk_no_hdmi: $(MKIMG) u-boot-spl-ddr.bin u-boot.itb
-	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_evk_no_hdmi_dual_bootloader: $(MKIMG) u-boot-spl-ddr.bin u-boot.itb
 	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -out $(OUTIMG)
 	./mkimage_imx8 -fit_ivt u-boot.itb 0x40200000 0x0 -out u-boot-ivt.itb
 
 flash_evk_no_hdmi_emmc_fastboot: $(MKIMG) u-boot-spl-ddr.bin u-boot.itb
-	./mkimage_imx8 -version $(VERSION) -dev emmc_fastboot -fit -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -dev emmc_fastboot -fit -loader u-boot-spl-ddr.bin $(SPL_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_ddr3l_val_no_hdmi: $(MKIMG) u-boot-spl-ddr3l.bin u-boot-ddr3l.itb
-	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr3l.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr3l.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr3l.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr3l.itb 0x40200000 0x60000 -out $(OUTIMG) 
 
 flash_ddr3l_evk_no_hdmi: $(MKIMG) u-boot-spl-ddr3l.bin u-boot-ddr3l-evk.itb
-	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr3l.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr3l-evk.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr3l.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr3l-evk.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_ddr4_val_no_hdmi: $(MKIMG) u-boot-spl-ddr4.bin u-boot-ddr4.itb
-	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr4.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr4.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr4.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr4.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_ddr4_evk_no_hdmi: $(MKIMG) u-boot-spl-ddr4.bin u-boot-ddr4-evk.itb
-	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr4.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr4-evk.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr4.bin $(SPL_LOAD_ADDR) -second_loader u-boot-ddr4-evk.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 
 flash_ddr4_evk_no_hdmi_dual_bootloader: $(MKIMG) u-boot-spl-ddr4.bin u-boot-ddr4-evk.itb
-	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr4.bin $(SPL_LOAD_ADDR) -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -fit -loader u-boot-spl-ddr4.bin $(SPL_LOAD_ADDR) -out $(OUTIMG) 
 	./mkimage_imx8 -fit_ivt u-boot-ddr4-evk.itb 0x40200000 0x0 -out u-boot-ivt.itb
 
 flash_evk_flexspi: $(MKIMG) u-boot-spl-ddr.bin u-boot.itb
-	./mkimage_imx8 -version $(VERSION) -dev flexspi -fit -loader u-boot-spl-ddr.bin $(SPL_FSPI_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -dev flexspi -fit -loader u-boot-spl-ddr.bin $(SPL_FSPI_LOAD_ADDR) -second_loader u-boot.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 	./$(QSPI_PACKER) $(QSPI_HEADER)
 
 flash_ddr3l_evk_flexspi: $(MKIMG) u-boot-spl-ddr3l.bin u-boot-ddr3l-evk.itb
-	./mkimage_imx8 -version $(VERSION) -dev flexspi -fit -loader u-boot-spl-ddr3l.bin $(SPL_FSPI_LOAD_ADDR) -second_loader u-boot-ddr3l-evk.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -dev flexspi -fit -loader u-boot-spl-ddr3l.bin $(SPL_FSPI_LOAD_ADDR) -second_loader u-boot-ddr3l-evk.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 	./$(QSPI_PACKER) $(QSPI_HEADER)
 
 flash_ddr4_evk_flexspi: $(MKIMG) u-boot-spl-ddr4.bin u-boot-ddr4-evk.itb
-	./mkimage_imx8 -version $(VERSION) -dev flexspi -fit -loader u-boot-spl-ddr4.bin $(SPL_FSPI_LOAD_ADDR) -second_loader u-boot-ddr4-evk.itb 0x40200000 0x60000 -out $(OUTIMG)
+	./mkimage_imx8 -version $(VERSION) -dev flexspi -fit -loader u-boot-spl-ddr4.bin $(SPL_FSPI_LOAD_ADDR) -second_loader u-boot-ddr4-evk.itb 0x40200000 0x60000 -out $(OUTIMG) > flash.log 2>&1
 	./$(QSPI_PACKER) $(QSPI_HEADER)
 
 flash_hdmi_spl_uboot: flash_evk
@@ -321,21 +321,21 @@ print_fit_hab: u-boot-nodtb.bin bl31.bin $(dtb)
 	./$(PAD_IMAGE) $(TEE)
 	./$(PAD_IMAGE) bl31.bin
 	./$(PAD_IMAGE) u-boot-nodtb.bin $(dtb)
-	TEE_LOAD_ADDR=$(TEE_LOAD_ADDR) ATF_LOAD_ADDR=$(ATF_LOAD_ADDR) VERSION=$(VERSION) ../$(SOC_DIR)/print_fit_hab.sh $(PRINT_FIT_HAB_OFFSET) $(dtb)
+	TEE_LOAD_ADDR=$(TEE_LOAD_ADDR) ATF_LOAD_ADDR=$(ATF_LOAD_ADDR) VERSION=$(VERSION) ../$(SOC_DIR)/print_fit_hab.sh $(PRINT_FIT_HAB_OFFSET) $(dtb) > fit.log
 	@rm -f $(dtb)
 
 print_fit_hab_ddr4: u-boot-nodtb.bin bl31.bin $(dtb_ddr4_evk)
 	./$(PAD_IMAGE) $(TEE)
 	./$(PAD_IMAGE) bl31.bin
 	./$(PAD_IMAGE) u-boot-nodtb.bin $(dtb_ddr4_evk)
-	TEE_LOAD_ADDR=$(TEE_LOAD_ADDR) ATF_LOAD_ADDR=$(ATF_LOAD_ADDR) VERSION=$(VERSION) ../$(SOC_DIR)/print_fit_hab.sh $(PRINT_FIT_HAB_OFFSET) $(dtb_ddr4_evk)
+	TEE_LOAD_ADDR=$(TEE_LOAD_ADDR) ATF_LOAD_ADDR=$(ATF_LOAD_ADDR) VERSION=$(VERSION) ../$(SOC_DIR)/print_fit_hab.sh $(PRINT_FIT_HAB_OFFSET) $(dtb_ddr4_evk) > fit.log
 	@rm -f $(dtb_ddr4_evk)
 
 print_fit_hab_flexspi: u-boot-nodtb.bin bl31.bin $(dtb)
 	./$(PAD_IMAGE) $(TEE)
 	./$(PAD_IMAGE) bl31.bin
 	./$(PAD_IMAGE) u-boot-nodtb.bin $(dtb)
-	TEE_LOAD_ADDR=$(TEE_LOAD_ADDR) ATF_LOAD_ADDR=$(ATF_LOAD_ADDR) VERSION=$(VERSION) BOOT_DEV="flexspi" ../$(SOC_DIR)/print_fit_hab.sh $(PRINT_FIT_HAB_OFFSET) $(dtb)
+	TEE_LOAD_ADDR=$(TEE_LOAD_ADDR) ATF_LOAD_ADDR=$(ATF_LOAD_ADDR) VERSION=$(VERSION) BOOT_DEV="flexspi" ../$(SOC_DIR)/print_fit_hab.sh $(PRINT_FIT_HAB_OFFSET) $(dtb) > fit.log
 	@rm -f $(dtb)
 
 nightly :
